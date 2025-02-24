@@ -26,7 +26,10 @@ const CarController = {
     }
     CarModel.addCar(req.body, (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.status(201).json({ message: "Car added successfully", carId: result.insertId });
+      CarModel.getCarById(result.insertId, (err, car) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ message: "Car added successfully", car: car[0] });
+      });
     });
   },
 
@@ -35,16 +38,22 @@ const CarController = {
     CarModel.updateCar(carId, req.body, (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
       if (result.affectedRows === 0) return res.status(404).json({ message: "Car not found" });
-      res.json({ message: "Car updated successfully" });
+      CarModel.getCarById(carId, (err, car) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: "Car updated successfully", car: car[0] });
+      });
     });
   },
 
   deleteCar: (req, res) => {
     const carId = req.params.id;
-    CarModel.deleteCar(carId, (err, result) => {
+    CarModel.getCarById(carId, (err, car) => {
       if (err) return res.status(500).json({ error: err.message });
-      if (result.affectedRows === 0) return res.status(404).json({ message: "Car not found" });
-      res.json({ message: "Car deleted successfully" });
+      if (car.length === 0) return res.status(404).json({ message: "Car not found" });
+      CarModel.deleteCar(carId, (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: "Car deleted successfully", deletedCar: car[0] });
+      });
     });
   },
 };
